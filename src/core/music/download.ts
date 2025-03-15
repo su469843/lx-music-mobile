@@ -15,8 +15,8 @@ export const getMusicUrl = async({ musicInfo, isRefresh, allowToggleSource = tru
   allowToggleSource?: boolean
 }): Promise<string> => {
   // if (!isRefresh) {
-  //   const path = await getDownloadFilePath(musicInfo, appSetting['download.savePath'])
-  //   if (path) return path
+  const path = await getDownloadFilePath(musicInfo, appSetting['download.savePath'])
+  if (path) return path
   // }
 
   return getOnlineMusicUrl({ musicInfo: musicInfo.metadata.musicInfo, isRefresh, onToggleSource, allowToggleSource })
@@ -29,8 +29,8 @@ export const getPicUrl = async({ musicInfo, isRefresh, listId, onToggleSource = 
   onToggleSource?: (musicInfo?: LX.Music.MusicInfoOnline) => void
 }): Promise<string> => {
   if (!isRefresh) {
-    // const path = await getDownloadFilePath(musicInfo, appSetting['download.savePath'])
-    // if (path) {
+    const path = await getDownloadFilePath(musicInfo, appSetting['download.savePath'])
+    if (path) {
     //   const pic = await global.lx.worker.main.getMusicFilePic(path)
     //   if (pic) return pic
     // }
@@ -62,8 +62,8 @@ export const getLyricInfo = async({ musicInfo, isRefresh, onToggleSource = () =>
     onToggleSource,
   }).catch(async() => {
     // 尝试读取文件内歌词
-    // const path = await getDownloadFilePath(musicInfo, appSetting['download.savePath'])
-    // if (path) {
+    const path = await getDownloadFilePath(musicInfo, appSetting['download.savePath'])
+    if (path) {
     //   const rawlrcInfo = await window.lx.worker.main.getMusicFileLyric(path)
     //   if (rawlrcInfo) return buildLyricInfo(rawlrcInfo)
     // }
