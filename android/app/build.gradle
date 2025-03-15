@@ -108,7 +108,8 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "cn.toside.music.mobile.mod"请    defaultConfig {
+    namespace "cn.toside.music.mobile.mod"
+    defaultConfig {
         applicationId "cn.toside.music.mobile.mod"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion

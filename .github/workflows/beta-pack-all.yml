@@ -44,7 +44,7 @@ jobs:
       - name: Check out git repository
         uses: actions/checkout@v4
         with:
-          ref: statusbar_lyric
+          ref: master
 
       - name: Setup Env
         uses: ./.github/actions/setup
