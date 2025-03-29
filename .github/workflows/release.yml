@@ -12,6 +12,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      KEYSTORE_FILE_NAME: "release.keystore"  # 固定文件名，避免路径问题
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -40,25 +42,27 @@ jobs:
           echo "Android app directory:"
           ls -la android/app/
 
-      - name: Setup Env
-        uses: ./.github/actions/setup
+      - name: Install dependencies
+        run: npm install
 
       - name: Create keystore directory and properties
         run: |
           mkdir -p android/app/keystore
-          echo "storeFile=keystore/${{ secrets.KEYSTORE_STORE_FILE }}" > android/keystore.properties
+          echo "storeFile=keystore/${{ env.KEYSTORE_FILE_NAME }}" > android/keystore.properties
           echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> android/keystore.properties
           echo "keyAlias=${{ secrets.KEYSTORE_KEY_ALIAS }}" >> android/keystore.properties
           echo "keyPassword=${{ secrets.KEYSTORE_KEY_PASSWORD }}" >> android/keystore.properties
-        
+
       - name: Build Packages
         shell: bash
         run: |
           cd android
           chmod +x ./gradlew
-          echo ${{ secrets.KEYSTORE_STORE_FILE_BASE64 }} | base64 --decode > app/keystore/${{ secrets.KEYSTORE_STORE_FILE }}
+          echo "Writing keystore file..."
+          echo "${{ secrets.KEYSTORE_STORE_FILE_BASE64 }}" | base64 --decode > app/keystore/${{ env.KEYSTORE_FILE_NAME }}
+          ls -la app/keystore/  # 调试：确认文件是否生成
           ./gradlew assembleRelease
-          rm -f app/keystore/${{ secrets.KEYSTORE_STORE_FILE }}
+          rm -f app/keystore/${{ env.KEYSTORE_FILE_NAME }}  # 构建后清理
 
       - name: Get package version
         run: |
@@ -72,10 +76,17 @@ jobs:
           echo "### MD5 校验" >> $GITHUB_STEP_SUMMARY
           cat md5.txt >> $GITHUB_STEP_SUMMARY
 
+      - name: Create artifacts directory
+        run: |
+          mkdir -p artifacts
+          cp android/app/build/outputs/apk/release/*.apk artifacts/
+          mv artifacts/app-release.apk artifacts/lx-music-mobile-v${{ env.PACKAGE_VERSION }}-release.apk
+
       - name: Upload Artifact
-        uses: ./.github/actions/upload-artifact
-        env:
-          PACKAGE_VERSION: ${{ env.PACKAGE_VERSION }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: lx-music-mobile-v${{ env.PACKAGE_VERSION }}
+          path: artifacts/*.apk
 
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/')
