@@ -8,6 +8,8 @@ import {
   type HashAlgorithm,
   getExternalStoragePaths as _getExternalStoragePaths,
 } from 'react-native-file-system'
+import { Platform } from 'react-native'
+import { requestStoragePermission } from './permissions'
 
 export type {
   FileType,
@@ -38,7 +40,9 @@ export const mkdir = async(path: string) => FileSystem.mkdir(path)
 export const stat = async(path: string) => FileSystem.stat(path)
 export const hash = async(path: string, algorithm: HashAlgorithm) => FileSystem.hash(path, algorithm)
 
-export const readFile = async(path: string, encoding?: Encoding) => FileSystem.readFile(path, encoding)
+export const readFile = async(path: string, encoding = 'utf8'): Promise<string> => {
+  return RNFS.readFile(path, encoding)
+}
 
 
 // export const copyFile = async(fromPath: string, toPath: string) => FileSystem.cp(fromPath, toPath)
@@ -53,7 +57,9 @@ export const existsFile = async(path: string) => FileSystem.exists(path)
 
 export const rename = async(path: string, name: string) => FileSystem.rename(path, name)
 
-export const writeFile = async(path: string, data: string, encoding?: Encoding) => FileSystem.writeFile(path, data, encoding)
+export const writeFile = async(path: string, content: string, encoding = 'utf8'): Promise<void> => {
+  await RNFS.writeFile(path, content, encoding)
+}
 
 export const appendFile = async(path: string, data: string, encoding?: Encoding) => FileSystem.appendFile(path, data, encoding)
 
@@ -84,4 +90,25 @@ export const downloadFile = (url: string, path: string, options: Omit<RNFS.Downl
 
 export const stopDownload = (jobId: number) => {
   RNFS.stopDownload(jobId)
+}
+
+/**
+ * 检查文件是否存在
+ */
+export const exists = async(path: string): Promise<boolean> => {
+  return RNFS.exists(path)
+}
+
+/**
+ * 创建目录
+ */
+export const createDir = async(path: string): Promise<void> => {
+  await RNFS.mkdir(path)
+}
+
+/**
+ * 获取文件信息
+ */
+export const getFileStat = async(path: string) => {
+  return RNFS.stat(path)
 }

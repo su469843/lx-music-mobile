@@ -5,6 +5,7 @@ import * as navigations from './navigation'
 import registerScreens from './registerScreens'
 import { removeComponentId } from '@/core/common'
 import { onAppLaunched } from './regLaunchedEvent'
+import DownloadScreen from '@/screens/Download'
 
 let unRegisterEvent: ReturnType<ReturnType<typeof Navigation.events>['registerScreenPoppedListener']>
 
@@ -28,6 +29,9 @@ const init = (callback: () => void | Promise<void>) => {
     console.log('Register app launched listener')
     void callback()
   })
+
+  // 在注册屏幕的地方添加下载页面
+  Navigation.registerComponent('DownloadScreen', () => DownloadScreen)
 }
 
 export * from './utils'

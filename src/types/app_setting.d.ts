@@ -340,6 +340,11 @@ declare global {
        * 是否启用同步
        */
       'sync.enable': boolean
+
+      /**
+       * 下载音质设置
+       */
+      'download.quality': LX.Quality
     }
   }
 }
