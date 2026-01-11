@@ -4,6 +4,7 @@ import Search from '../Views/Search'
 import SongList from '../Views/SongList'
 import Mylist from '../Views/Mylist'
 import Leaderboard from '../Views/Leaderboard'
+import DownloadManage from '../Views/DownloadManage'
 import Setting from '../Views/Setting'
 import commonState, { type InitState as CommonState } from '@/store/common/state'
 import { createStyle } from '@/utils/tools'
@@ -152,7 +153,50 @@ const MylistPage = () => {
       global.state_event.off('navActiveIdUpdated', handleNavIdUpdate)
       global.state_event.off('themeUpdated', handleHide)
       global.state_event.off('languageChanged', handleHide)
-      global.state_event.on('configUpdated', handleConfigUpdated)
+      global.state_event.off('configUpdated', handleConfigUpdated)
+    }
+  }, [])
+
+  return visible ? component : null
+}
+const DownloadPage = () => {
+  const [visible, setVisible] = useState(commonState.navActiveId == 'nav_download')
+  const downloadManageRef = useRef<any>(null)
+  const component = useMemo(() => <DownloadManage ref={downloadManageRef} />, [])
+  useEffect(() => {
+    let currentId: CommonState['navActiveId'] = commonState.navActiveId
+    const handleNavIdUpdate = (id: CommonState['navActiveId']) => {
+      currentId = id
+      if (id == 'nav_download') {
+        requestAnimationFrame(() => {
+          setVisible(true)
+          setTimeout(() => {
+            downloadManageRef.current?.setVisible(true)
+          }, 100)
+        })
+      } else {
+        setVisible(false)
+        downloadManageRef.current?.setVisible(false)
+      }
+    }
+    const handleHide = () => {
+      if (currentId != 'nav_setting') return
+      setVisible(false)
+      downloadManageRef.current?.setVisible(false)
+    }
+    const handleConfigUpdated = (keys: Array<keyof LX.AppSetting>) => {
+      if (keys.some(k => hideKeys.includes(k))) handleHide()
+    }
+    global.state_event.on('navActiveIdUpdated', handleNavIdUpdate)
+    global.state_event.on('themeUpdated', handleHide)
+    global.state_event.on('languageChanged', handleHide)
+    global.state_event.on('configUpdated', handleConfigUpdated)
+
+    return () => {
+      global.state_event.off('navActiveIdUpdated', handleNavIdUpdate)
+      global.state_event.off('themeUpdated', handleHide)
+      global.state_event.off('languageChanged', handleHide)
+      global.state_event.off('configUpdated', handleConfigUpdated)
     }
   }, [])
 
@@ -183,13 +227,15 @@ const viewMap = {
   nav_songlist: 1,
   nav_top: 2,
   nav_love: 3,
-  nav_setting: 4,
+  nav_download: 4,
+  nav_setting: 5,
 }
 const indexMap = [
   'nav_search',
   'nav_songlist',
   'nav_top',
   'nav_love',
+  'nav_download',
   'nav_setting',
 ] as const
 
@@ -285,6 +331,9 @@ const Main = () => {
       </View>
       <View collapsable={false} key="nav_love" style={styles.pageStyle}>
         <MylistPage />
+      </View>
+      <View collapsable={false} key="nav_download" style={styles.pageStyle}>
+        <DownloadPage />
       </View>
       <View collapsable={false} key="nav_setting" style={styles.pageStyle}>
         <SettingPage />
