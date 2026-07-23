@@ -45,6 +45,7 @@
   "disagree": "Deny",
   "disagree_tip": "Cancelled...",
   "dislike": "Dislike",
+  "download": "Download",
   "duplicate_list_tip": "You have collected this list \"{name}\", do you need to update the songs in it?",
   "edit_metadata": "Edit Metadata",
   "exit_app_tip": "Are you sure you want to exit the app?",
@@ -160,6 +161,7 @@
   "music_toggle__confirm": "Confirm",
   "music_toggle__duplicate_tip": "The same song already exists in the list, should I remove it and continue?",
   "name": "Title: {name}",
+  "nav_download": "Downloads",
   "nav_exit": "Exit App",
   "nav_love": "Your Library",
   "nav_search": "Search",
@@ -515,5 +517,13 @@
   "version_title_latest": "🎉 The current version is already the latest 🎊",
   "version_title_new": "🌟 New version found 🌟",
   "version_title_unknown": "❓ Failed to get the latest version information ❓",
-  "version_title_update": "🚀 App update 🚀"
+  "version_title_update": "🚀 App update 🚀",
+  "waiting": "Waiting",
+  "download_failed": "Download failed",
+  "download_added": "Download task added",
+  "download_already_completed": "This song has already been downloaded",
+  "download_already_in_progress": "This song is being downloaded",
+  "no_download_tasks": "No download tasks",
+  "clear_completed_tasks_tip": "Confirm to clear completed download tasks?",
+  "download_local_music_not_supported": "Local music does not need to be downloaded"
 }

@@ -28,6 +28,7 @@ export interface ListMenuProps {
   onSync: (listInfo: LX.List.UserListInfo) => void
   onSelectLocalFile: (listInfo: LX.List.MyListInfo, index: number) => void
   onRemove: (listInfo: LX.List.UserListInfo) => void
+  onDownload: (listInfo: LX.List.MyListInfo) => void
 }
 export interface ListMenuType {
   show: (selectInfo: SelectInfo, position: Position) => void
@@ -47,6 +48,7 @@ export default forwardRef<ListMenuType, ListMenuProps>(({
   onSync,
   onSelectLocalFile,
   onRemove,
+  onDownload,
 }, ref) => {
   const t = useI18n()
   const menuRef = useRef<MenuType>(null)
@@ -91,6 +93,7 @@ export default forwardRef<ListMenuType, ListMenuProps>(({
       { action: 'rename', disabled: !rename, label: t('list_rename') },
       { action: 'sort', label: t('list_sort') },
       { action: 'duplicateMusic', label: t('lists__duplicate') },
+      { action: 'download', label: t('download') },
       { action: 'local_file', disabled: !local_file, label: t('list_select_local_file') },
       { action: 'sync', disabled: !sync || !local_file, label: t('list_sync') },
       { action: 'import', label: t('list_import') },
@@ -114,6 +117,9 @@ export default forwardRef<ListMenuType, ListMenuProps>(({
         break
       case 'duplicateMusic':
         onDuplicateMusic(selectInfo.listInfo)
+        break
+      case 'download':
+        onDownload(selectInfo.listInfo)
         break
       case 'import':
         onImport(selectInfo.listInfo, selectInfo.index)

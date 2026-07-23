@@ -45,6 +45,7 @@
   "disagree": "我就不",
   "disagree_tip": "那算了...🙄",
   "dislike": "不喜欢",
+  "download": "下载",
   "duplicate_list_tip": "你之前已收藏过列表「{name}」，是否需要更新里面的歌曲？",
   "edit_metadata": "编辑标签",
   "exit_app_tip": "确定要退出应用吗？",
@@ -160,6 +161,7 @@
   "music_toggle__confirm": "确认",
   "music_toggle__duplicate_tip": "列表中已存在相同的歌曲，是否将其移除并继续？",
   "name": "歌曲名：{name}",
+  "nav_download": "下载",
   "nav_exit": "退出应用",
   "nav_love": "我的列表",
   "nav_search": "搜索",
@@ -515,5 +517,13 @@
   "version_title_latest": "🎉 当前版本已是最新 🎊",
   "version_title_new": "🌟 发现新版本 🌟",
   "version_title_unknown": "❓ 获取最新版本信息失败 ❓",
-  "version_title_update": "🚀 软件更新 🚀"
+  "version_title_update": "🚀 软件更新 🚀",
+  "waiting": "等待中",
+  "download_failed": "下载失败",
+  "download_added": "已添加下载任务",
+  "download_already_completed": "该歌曲已下载完成",
+  "download_already_in_progress": "该歌曲正在下载中",
+  "no_download_tasks": "暂无下载任务",
+  "clear_completed_tasks_tip": "确认清除已完成的下载任务？",
+  "download_local_music_not_supported": "本地音乐无需下载"
 }

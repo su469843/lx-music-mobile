@@ -2,8 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 
 import ListMenu, { type ListMenuType } from './ListMenu'
 import ListNameEdit, { type ListNameEditType } from './ListNameEdit'
+import { addDownloadMultiple } from '@/core/download/manager'
+import { getListMusicSync } from '@/utils/listManage'
 import List from './List'
 import ListImportExport, { type ListImportExportType } from './ListImportExport'
+import { toast } from '@/utils/tools'
 import { handleRemove, handleSync } from './listAction'
 import ListMusicSort, { type ListMusicSortType } from './ListMusicSort'
 import DuplicateMusic, { type DuplicateMusicType } from './DuplicateMusic'
@@ -34,6 +37,15 @@ export default () => {
     }
   }, [])
 
+  const handleDownload = (listInfo: LX.List.MyListInfo) => {
+    const musicItems = getListMusicSync(listInfo.id)
+    if (musicItems && musicItems.length) {
+      addDownloadMultiple(musicItems as unknown as LX.Music.MusicInfoOnline[])
+    } else {
+      toast(global.i18n.t('no_item'))
+    }
+  }
+
   return (
     visible
       ? <>
@@ -53,6 +65,7 @@ export default () => {
             onRemove={info => { handleRemove(info) }}
             onSync={info => { handleSync(info) }}
             onSelectLocalFile={(info, position) => listImportExportRef.current?.selectFile(info, position)}
+            onDownload={handleDownload}
           />
           {/* <ImportExport actionType={actionType} visible={isShowChoosePath} hide={() => setShowChoosePath(false)} selectedListRef={selectedListRef} /> */}
         </>

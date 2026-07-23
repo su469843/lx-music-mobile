@@ -45,6 +45,7 @@
   "disagree": "我就不",
   "disagree_tip": "那算了...🙄",
   "dislike": "不喜歡",
+  "download": "下載",
   "duplicate_list_tip": "你之前已收藏過清單「{name}」，是否需要更新裡面的歌曲？",
   "edit_metadata": "編輯標籤",
   "exit_app_tip": "確定要退出應用嗎？",
@@ -160,6 +161,7 @@
   "music_toggle__confirm": "確認",
   "music_toggle__duplicate_tip": "列表中已存在相同的歌曲，是否將其移除並繼續？",
   "name": "標題：{name}",
+  "nav_download": "下載",
   "nav_exit": "退出應用",
   "nav_love": "我的清單",
   "nav_search": "搜尋",
@@ -515,5 +517,13 @@
   "version_title_latest": "🎉 目前版本已是最新 🎊",
   "version_title_new": "🌟 發現新版本 🌟",
   "version_title_unknown": "❓ 獲取最新版本資訊失敗 ❓",
-  "version_title_update": "🚀 軟體更新 🚀"
+  "version_title_update": "🚀 軟體更新 🚀",
+  "waiting": "等待中",
+  "download_failed": "下載失敗",
+  "download_added": "已新增下載任務",
+  "download_already_completed": "該歌曲已下載完成",
+  "download_already_in_progress": "該歌曲正在下載中",
+  "no_download_tasks": "暫無下載任務",
+  "clear_completed_tasks_tip": "確認清除已完成的下載任務？",
+  "download_local_music_not_supported": "本地音樂無需下載"
 }

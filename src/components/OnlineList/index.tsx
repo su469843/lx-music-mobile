@@ -8,6 +8,8 @@ import ListMusicAdd, { type MusicAddModalType as ListMusicAddType } from '@/comp
 import MultipleModeBar, { type MultipleModeBarType, type SelectMode } from './MultipleModeBar'
 import { handleDislikeMusic, handlePlay, handlePlayLater, handleShare, handleShowMusicSourceDetail } from './listAction'
 import { createStyle } from '@/utils/tools'
+import { addDownload } from '@/core/download/manager'
+import { toast } from '@/utils/tools'
 
 export interface OnlineListProps {
   onRefresh: ListProps['onRefresh']
@@ -78,6 +80,21 @@ export default forwardRef<OnlineListType, OnlineListProps>(({
     }
   }
 
+  const handleDownload = (info: SelectInfo) => {
+    if (info.selectedList.length) {
+      for (const music of info.selectedList) {
+        addDownload(music).catch((e: Error) => {
+          toast(e.message || global.i18n.t('download_failed') || '下载失败')
+        })
+      }
+      toast(global.i18n.t('download_added') || '已添加下载任务')
+    } else {
+      addDownload(info.musicInfo).catch((e: Error) => {
+        toast(e.message || global.i18n.t('download_failed') || '下载失败')
+      })
+    }
+  }
+
   return (
     <View style={styles.container}>
       <View style={{ flex: 1 }}>
@@ -111,6 +128,7 @@ export default forwardRef<OnlineListType, OnlineListProps>(({
         onAdd={handleAddMusic}
         onMusicSourceDetail={info => { void handleShowMusicSourceDetail(info.musicInfo) }}
         onDislikeMusic={info => { void handleDislikeMusic(info.musicInfo) }}
+        onDownload={handleDownload}
       />
       {/* <LoadingMask ref={loadingMaskRef} /> */}
     </View>
@@ -130,4 +148,3 @@ const styles = createStyle({
     height: 40,
   },
 })
-
