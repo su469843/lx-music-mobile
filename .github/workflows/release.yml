@@ -36,10 +36,10 @@ jobs:
           echo "$KEYSTORE_STORE_FILE_BASE64" | tr -d '\r' | base64 --decode > "app/$KEYSTORE_STORE_FILE"
 
           # 调用 gradle，参数也使用双引号引用变量
-          ./gradlew assembleRelease \
-            -PMYAPP_UPLOAD_STORE_FILE="app/$KEYSTORE_STORE_FILE" \
-            -PMYAPP_UPLOAD_KEY_ALIAS="$KEYSTORE_KEY_ALIAS" \
-            -PMYAPP_UPLOAD_STORE_PASSWORD="$KEYSTORE_STORE_PASSWORD" \
+          ./gradlew assembleRelease \\
+            -PMYAPP_UPLOAD_STORE_FILE="$KEYSTORE_STORE_FILE" \\
+            -PMYAPP_UPLOAD_KEY_ALIAS="$KEYSTORE_KEY_ALIAS" \\
+            -PMYAPP_UPLOAD_STORE_PASSWORD="$KEYSTORE_STORE_PASSWORD" \\
             -PMYAPP_UPLOAD_KEY_PASSWORD="$KEYSTORE_KEY_PASSWORD"
 
           # 清理敏感文件
