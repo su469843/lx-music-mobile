@@ -35,13 +35,14 @@ jobs:
 
           echo "$KEYSTORE_STORE_FILE_BASE64" | tr -d '\r' | base64 --decode > "app/$KEYSTORE_STORE_FILE"
 
-          # 璋冪敤 gradle锛屽弬鏁颁篃浣跨敤鍙屽紩鍙峰紩鐢ㄥ彉閲?          ./gradlew assembleRelease \
+          # 调用 gradle，参数也使用双引号引用变量
+          ./gradlew assembleRelease \
             -PMYAPP_UPLOAD_STORE_FILE="$KEYSTORE_STORE_FILE" \
             -PMYAPP_UPLOAD_KEY_ALIAS="$KEYSTORE_KEY_ALIAS" \
             -PMYAPP_UPLOAD_STORE_PASSWORD="$KEYSTORE_STORE_PASSWORD" \
             -PMYAPP_UPLOAD_KEY_PASSWORD="$KEYSTORE_KEY_PASSWORD"
 
-          # 娓呯悊鏁忔劅鏂囦欢
+          # 清理敏感文件
           shred -u "app/$KEYSTORE_STORE_FILE" || rm -f "app/$KEYSTORE_STORE_FILE"
 
       # Push tag to GitHub if package.json version's tag is not tagged
