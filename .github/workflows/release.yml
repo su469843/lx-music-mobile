@@ -19,12 +19,29 @@ jobs:
       - name: Build Packages
         env:
           DISABLE_SVG: 1
+          KEYSTORE_STORE_FILE_BASE64: ${{ secrets.KEYSTORE_STORE_FILE_BASE64 }}
+          KEYSTORE_STORE_FILE: ${{ secrets.KEYSTORE_STORE_FILE }}
+          KEYSTORE_KEY_ALIAS: ${{ secrets.KEYSTORE_KEY_ALIAS }}
+          KEYSTORE_STORE_PASSWORD: ${{ secrets.KEYSTORE_STORE_PASSWORD }}
         shell: bash
         run: |
+          set -euo pipefail
           cd android
-          echo ${{ secrets.KEYSTORE_STORE_FILE_BASE64 }} | base64 --decode > app/${{ secrets.KEYSTORE_STORE_FILE }}
-          ./gradlew assembleRelease -PMYAPP_UPLOAD_STORE_FILE='${{ secrets.KEYSTORE_STORE_FILE }}' -PMYAPP_UPLOAD_KEY_ALIAS='${{ secrets.KEYSTORE_KEY_ALIAS }}' -PMYAPP_UPLOAD_STORE_PASSWORD='${{ secrets.KEYSTORE_PASSWORD }}' -PMYAPP_UPLOAD_KEY_PASSWORD='${{ secrets.KEYSTORE_KEY_PASSWORD }}'
-          rm -f app/${{ secrets.KEYSTORE_STORE_FILE }}
+
+          # 如果 KEYSTORE_STORE_FILE_BASE64 可能含有 Windows 换行，先用 tr 规范化（可选）
+          # echo "$KEYSTORE_STORE_FILE_BASE64" | tr -d '\r' | base64 --decode > "app/$KEYSTORE_STORE_FILE"
+
+          # 推荐用双引号，避免因 secret 含空格/换行导致脚本被破坏
+          echo "$KEYSTORE_STORE_FILE_BASE64" | base64 --decode > "app/$KEYSTORE_STORE_FILE"
+
+          # 调用 gradle，参数也使用双引号引用变量
+          ./gradlew assembleRelease \
+            -PMYAPP_UPLOAD_STORE_FILE="app/$KEYSTORE_STORE_FILE" \
+            -PMYAPP_UPLOAD_KEY_ALIAS="$KEYSTORE_KEY_ALIAS" \
+            -PMYAPP_UPLOAD_STORE_PASSWORD="$KEYSTORE_STORE_PASSWORD"
+
+          # 清理敏感文件
+          shred -u "app/$KEYSTORE_STORE_FILE" || rm -f "app/$KEYSTORE_STORE_FILE"
 
       # Push tag to GitHub if package.json version's tag is not tagged
       - name: Get package version
@@ -59,10 +76,10 @@ jobs:
   #       uses: actions/checkout@v4
   #       with:
   #         ref: statusbar_lyric
-
+  #
   #     - name: Setup Env
   #       uses: ./.github/actions/setup
-
+  #
   #     - name: Build Packages
   #       shell: bash
   #       run: |
@@ -70,13 +87,13 @@ jobs:
   #         echo ${{ secrets.KEYSTORE_STORE_FILE_BASE64 }} | base64 --decode > app/${{ secrets.KEYSTORE_STORE_FILE }}
   #         ./gradlew assembleRelease -PMYAPP_UPLOAD_STORE_FILE='${{ secrets.KEYSTORE_STORE_FILE }}' -PMYAPP_UPLOAD_KEY_ALIAS='${{ secrets.KEYSTORE_KEY_ALIAS }}' -PMYAPP_UPLOAD_STORE_PASSWORD='${{ secrets.KEYSTORE_PASSWORD }}' -PMYAPP_UPLOAD_KEY_PASSWORD='${{ secrets.KEYSTORE_KEY_PASSWORD }}'
   #         rm -f app/${{ secrets.KEYSTORE_STORE_FILE }}
-
+  #
   #     # Push tag to GitHub if package.json version's tag is not tagged
   #     - name: Get package version
   #       run: |
   #         node -p -e '`PACKAGE_VERSION=${require("./package.json").version}`' >> $GITHUB_ENV
   #         echo "COMMIT_SHA=$(git show -s --format=%H)" >> $GITHUB_ENV
-
+  #
   #     - name: Create git tag
   #       uses: pkgdeps/git-tag-action@v3
   #       with:
@@ -85,19 +102,19 @@ jobs:
   #         version: ${{ env.PACKAGE_VERSION }}
   #         git_commit_sha: ${{ env.COMMIT_SHA }}
   #         git_tag_prefix: "v"
-
+  #
   #     - name: Generate file MD5
   #       run: |
   #         echo "current commit sha: ${{ env.COMMIT_SHA }}"
   #         cd android/app/build/outputs/apk/release
   #         md5sum *.apk
-
+  #
   #     - name: Upload Artifact
   #       uses: ./.github/actions/upload-artifact
   #       env:
   #         PACKAGE_TYPE: 'Android_SL'
   #         PACKAGE_VERSION: ${{ env.PACKAGE_VERSION }}
-
+  #
   # Android_5:
   #   name: Android_5
   #   runs-on: ubuntu-latest
@@ -106,10 +123,10 @@ jobs:
   #       uses: actions/checkout@v4
   #       with:
   #         ref: android_5
-
+  #
   #     - name: Setup Env
   #       uses: ./.github/actions/setup
-
+  #
   #     - name: Build Packages
   #       shell: bash
   #       run: |
@@ -117,13 +134,13 @@ jobs:
   #         echo ${{ secrets.KEYSTORE_STORE_FILE_BASE64 }} | base64 --decode > app/${{ secrets.KEYSTORE_STORE_FILE }}
   #         ./gradlew assembleRelease -PMYAPP_UPLOAD_STORE_FILE='${{ secrets.KEYSTORE_STORE_FILE }}' -PMYAPP_UPLOAD_KEY_ALIAS='${{ secrets.KEYSTORE_KEY_ALIAS }}' -PMYAPP_UPLOAD_STORE_PASSWORD='${{ secrets.KEYSTORE_PASSWORD }}' -PMYAPP_UPLOAD_KEY_PASSWORD='${{ secrets.KEYSTORE_KEY_PASSWORD }}'
   #         rm -f app/${{ secrets.KEYSTORE_STORE_FILE }}
-
+  #
   #     # Push tag to GitHub if package.json version's tag is not tagged
   #     - name: Get package version
   #       run: |
   #         node -p -e '`PACKAGE_VERSION=${require("./package.json").version}`' >> $GITHUB_ENV
   #         echo "COMMIT_SHA=$(git show -s --format=%H)" >> $GITHUB_ENV
-
+  #
   #     - name: Create git tag
   #       uses: pkgdeps/git-tag-action@v3
   #       with:
@@ -132,13 +149,13 @@ jobs:
   #         version: ${{ env.PACKAGE_VERSION }}
   #         git_commit_sha: ${{ env.COMMIT_SHA }}
   #         git_tag_prefix: "v"
-
+  #
   #     - name: Generate file MD5
   #       run: |
   #         echo "current commit sha: ${{ env.COMMIT_SHA }}"
   #         cd android/app/build/outputs/apk/release
   #         md5sum *.apk
-
+  #
   #     - name: Upload Artifact
   #       uses: ./.github/actions/upload-artifact
   #       env:
@@ -181,12 +198,7 @@ jobs:
           draft: false
           tag_name: v${{ env.PACKAGE_VERSION }}
           files: |
-            artifacts/lx-music-mobile-v${{ env.PACKAGE_VERSION }}-arm64-v8a.apk
-            artifacts/lx-music-mobile-v${{ env.PACKAGE_VERSION }}-armeabi-v7a.apk
-            artifacts/lx-music-mobile-v${{ env.PACKAGE_VERSION }}-x86_64.apk
-            artifacts/lx-music-mobile-v${{ env.PACKAGE_VERSION }}-x86.apk
-            artifacts/lx-music-mobile-v${{ env.PACKAGE_VERSION }}-universal.apk
-
+            artifacts/*.apk
           # artifacts/lx-music-mobile-v${{ env.PACKAGE_VERSION }}-sl-arm64-v8a.apk
           # artifacts/lx-music-mobile-v${{ env.PACKAGE_VERSION }}-android_5-universal.apk
         env:
