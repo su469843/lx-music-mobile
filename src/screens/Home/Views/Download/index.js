@@ -84,9 +84,9 @@ const styles = createStyle({
 })
 
 const TaskItem = ({ task, onRemove, onRetry }: {
-  task: DownloadTask
-  onRemove: (id: string) => void
-  onRetry: (id: string) => void
+  task: DownloadTask,
+  onRemove: (id: string) => void,
+  onRetry: (id: string) => void,
 }) => {
   const theme = useTheme()
   const t = useI18n()
