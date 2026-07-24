@@ -1,4 +1,4 @@
-name: Build
+﻿name: Build
 
 on:
   push:
@@ -35,14 +35,13 @@ jobs:
 
           echo "$KEYSTORE_STORE_FILE_BASE64" | tr -d '\r' | base64 --decode > "app/$KEYSTORE_STORE_FILE"
 
-          # 调用 gradle，参数也使用双引号引用变量
-          ./gradlew assembleRelease \\
-            -PMYAPP_UPLOAD_STORE_FILE="$KEYSTORE_STORE_FILE" \\
-            -PMYAPP_UPLOAD_KEY_ALIAS="$KEYSTORE_KEY_ALIAS" \\
-            -PMYAPP_UPLOAD_STORE_PASSWORD="$KEYSTORE_STORE_PASSWORD" \\
+          # 璋冪敤 gradle锛屽弬鏁颁篃浣跨敤鍙屽紩鍙峰紩鐢ㄥ彉閲?          ./gradlew assembleRelease \
+            -PMYAPP_UPLOAD_STORE_FILE="$KEYSTORE_STORE_FILE" \
+            -PMYAPP_UPLOAD_KEY_ALIAS="$KEYSTORE_KEY_ALIAS" \
+            -PMYAPP_UPLOAD_STORE_PASSWORD="$KEYSTORE_STORE_PASSWORD" \
             -PMYAPP_UPLOAD_KEY_PASSWORD="$KEYSTORE_KEY_PASSWORD"
 
-          # 清理敏感文件
+          # 娓呯悊鏁忔劅鏂囦欢
           shred -u "app/$KEYSTORE_STORE_FILE" || rm -f "app/$KEYSTORE_STORE_FILE"
 
       # Push tag to GitHub if package.json version's tag is not tagged
@@ -185,7 +184,7 @@ jobs:
           cd artifacts
           md5sum *.apk >> ../publish/changeLog.md
           echo -e '```\n' >> ../publish/changeLog.md
-          echo -e '\n[软件安装包说明](https://lyswhut.github.io/lx-music-doc/download#%E8%BD%AF%E4%BB%B6%E5%AE%89%E8%A3%85%E5%8C%85%E8%AF%B4%E6%98%8E)\n' >> ../publish/changeLog.md
+          echo -e '\n[杞欢瀹夎鍖呰鏄嶿(https://lyswhut.github.io/lx-music-doc/download#%E8%BD%AF%E4%BB%B6%E5%AE%89%E8%A3%85%E5%8C%85%E8%AF%B4%E6%98%8E)\n' >> ../publish/changeLog.md
 
       - name: Get package version
         run: |
@@ -202,3 +201,4 @@ jobs:
           files: artifacts/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
