@@ -199,9 +199,6 @@ jobs:
           prerelease: false
           draft: false
           tag_name: v${{ env.PACKAGE_VERSION }}
-          files: |
-            artifacts/*.apk
-          # artifacts/lx-music-mobile-v${{ env.PACKAGE_VERSION }}-sl-arm64-v8a.apk
-          # artifacts/lx-music-mobile-v${{ env.PACKAGE_VERSION }}-android_5-universal.apk
+          files: artifacts/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
