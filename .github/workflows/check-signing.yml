@@ -1,0 +1,119 @@
+name: Check Signing Config
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check-signing:
+    name: Check Signing Config
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out git repository
+        uses: actions/checkout@v4
+
+      - name: Verify Keystore Signing Config
+        env:
+          KEYSTORE_STORE_FILE_BASE64: ${{ secrets.KEYSTORE_STORE_FILE_BASE64 }}
+          KEYSTORE_STORE_FILE: ${{ secrets.KEYSTORE_STORE_FILE }}
+          KEYSTORE_KEY_ALIAS: ${{ secrets.KEYSTORE_KEY_ALIAS }}
+          KEYSTORE_STORE_PASSWORD: ${{ secrets.KEYSTORE_STORE_PASSWORD }}
+          KEYSTORE_KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd android
+
+          echo "============================================"
+          echo "  Step 1: Check environment variables"
+          echo "============================================"
+          echo "KEYSTORE_STORE_FILE: [$KEYSTORE_STORE_FILE]"
+          echo "KEYSTORE_KEY_ALIAS: [$KEYSTORE_KEY_ALIAS]"
+          echo "KEYSTORE_STORE_PASSWORD length: ${#KEYSTORE_STORE_PASSWORD}"
+          echo "KEYSTORE_KEY_PASSWORD length: ${#KEYSTORE_KEY_PASSWORD}"
+          echo "KEYSTORE_STORE_FILE_BASE64 length: ${#KEYSTORE_STORE_FILE_BASE64}"
+
+          if [ -z "$KEYSTORE_STORE_FILE" ]; then
+            echo "ERROR: KEYSTORE_STORE_FILE is empty!"
+            exit 1
+          fi
+          if [ -z "$KEYSTORE_STORE_FILE_BASE64" ]; then
+            echo "ERROR: KEYSTORE_STORE_FILE_BASE64 is empty!"
+            exit 1
+          fi
+          if [ -z "$KEYSTORE_STORE_PASSWORD" ]; then
+            echo "ERROR: KEYSTORE_STORE_PASSWORD is empty!"
+            exit 1
+          fi
+          if [ -z "$KEYSTORE_KEY_PASSWORD" ]; then
+            echo "ERROR: KEYSTORE_KEY_PASSWORD is empty!"
+            exit 1
+          fi
+          if [ -z "$KEYSTORE_KEY_ALIAS" ]; then
+            echo "ERROR: KEYSTORE_KEY_ALIAS is empty!"
+            exit 1
+          fi
+          echo "All environment variables are present."
+
+          echo ""
+          echo "============================================"
+          echo "  Step 2: Decode Base64 keystore file"
+          echo "============================================"
+          echo "Decoding to: app/$KEYSTORE_STORE_FILE"
+          echo "$KEYSTORE_STORE_FILE_BASE64" | tr -d '\r' | base64 --decode > "app/$KEYSTORE_STORE_FILE"
+          echo "File size: $(ls -la "app/$KEYSTORE_STORE_FILE" | awk '{print $5}') bytes"
+          file "app/$KEYSTORE_STORE_FILE"
+
+          echo ""
+          echo "============================================"
+          echo "  Step 3: Verify keystore with keytool"
+          echo "  (Testing store password)"
+          echo "============================================"
+          keytool -list -v -keystore "app/$KEYSTORE_STORE_FILE" -storepass "$KEYSTORE_STORE_PASSWORD" 2>&1 || {
+            echo ""
+            echo "============================================"
+            echo "  FAILED: Cannot read keystore!"
+            echo "  KEYSTORE_STORE_PASSWORD does not match."
+            echo "============================================"
+            rm -f "app/$KEYSTORE_STORE_FILE"
+            exit 1
+          }
+
+          echo ""
+          echo "============================================"
+          echo "  Step 4: Verify key alias and key password"
+          echo "============================================"
+          echo "Alias: $KEYSTORE_KEY_ALIAS"
+          keytool -list -v -keystore "app/$KEYSTORE_STORE_FILE" -storepass "$KEYSTORE_STORE_PASSWORD" -alias "$KEYSTORE_KEY_ALIAS" -keypass "$KEYSTORE_KEY_PASSWORD" 2>&1 || {
+            echo ""
+            echo "============================================"
+            echo "  FAILED: Cannot verify key alias/password!"
+            echo "  Check KEYSTORE_KEY_ALIAS and KEYSTORE_KEY_PASSWORD."
+            echo "============================================"
+            rm -f "app/$KEYSTORE_STORE_FILE"
+            exit 1
+          }
+
+          echo ""
+          echo "============================================"
+          echo "  Step 5: Simulate Gradle file path"
+          echo "============================================"
+          echo "Gradle resolves file() relative to android/app/"
+          echo "Keystore path for Gradle: android/app/$KEYSTORE_STORE_FILE"
+          if [ -f "app/$KEYSTORE_STORE_FILE" ]; then
+            echo "File exists at expected location. OK!"
+          else
+            echo "ERROR: File not found!"
+            exit 1
+          fi
+
+          echo ""
+          echo "============================================"
+          echo "  Step 6: Cleanup"
+          echo "============================================"
+          rm -f "app/$KEYSTORE_STORE_FILE"
+          echo "Keystore file removed."
+
+          echo ""
+          echo "============================================"
+          echo "  SUCCESS: All signing checks passed!"
+          echo "============================================"
