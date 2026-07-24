@@ -5,6 +5,10 @@ on:
     branches:
       - master
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   Android:
     name: Android
@@ -23,22 +27,20 @@ jobs:
           KEYSTORE_STORE_FILE: ${{ secrets.KEYSTORE_STORE_FILE }}
           KEYSTORE_KEY_ALIAS: ${{ secrets.KEYSTORE_KEY_ALIAS }}
           KEYSTORE_STORE_PASSWORD: ${{ secrets.KEYSTORE_STORE_PASSWORD }}
+          KEYSTORE_KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}
         shell: bash
         run: |
           set -euo pipefail
           cd android
 
-          # 如果 KEYSTORE_STORE_FILE_BASE64 可能含有 Windows 换行，先用 tr 规范化（可选）
-          # echo "$KEYSTORE_STORE_FILE_BASE64" | tr -d '\r' | base64 --decode > "app/$KEYSTORE_STORE_FILE"
-
-          # 推荐用双引号，避免因 secret 含空格/换行导致脚本被破坏
-          echo "$KEYSTORE_STORE_FILE_BASE64" | base64 --decode > "app/$KEYSTORE_STORE_FILE"
+          echo "$KEYSTORE_STORE_FILE_BASE64" | tr -d '\r' | base64 --decode > "app/$KEYSTORE_STORE_FILE"
 
           # 调用 gradle，参数也使用双引号引用变量
           ./gradlew assembleRelease \
             -PMYAPP_UPLOAD_STORE_FILE="app/$KEYSTORE_STORE_FILE" \
             -PMYAPP_UPLOAD_KEY_ALIAS="$KEYSTORE_KEY_ALIAS" \
-            -PMYAPP_UPLOAD_STORE_PASSWORD="$KEYSTORE_STORE_PASSWORD"
+            -PMYAPP_UPLOAD_STORE_PASSWORD="$KEYSTORE_STORE_PASSWORD" \
+            -PMYAPP_UPLOAD_KEY_PASSWORD="$KEYSTORE_KEY_PASSWORD"
 
           # 清理敏感文件
           shred -u "app/$KEYSTORE_STORE_FILE" || rm -f "app/$KEYSTORE_STORE_FILE"

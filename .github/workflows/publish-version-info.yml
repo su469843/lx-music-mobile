@@ -5,6 +5,10 @@ on:
   release:
     types: [published]
 
+concurrency:
+  group: publish-version-info-${{ github.event.release.tag_name || github.run_id }}
+  cancel-in-progress: false
+
 jobs:
   dispatch:
     runs-on: ubuntu-latest
