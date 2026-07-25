@@ -8,7 +8,7 @@ import ListMusicAdd, { type MusicAddModalType as ListMusicAddType } from '@/comp
 import MultipleModeBar, { type MultipleModeBarType, type SelectMode } from './MultipleModeBar'
 import { handleDislikeMusic, handlePlay, handlePlayLater, handleShare, handleShowMusicSourceDetail } from './listAction'
 import { createStyle } from '@/utils/tools'
-import { addDownload } from '@/core/download/manager'
+import { addDownload, handleDownloadWithQuality } from '@/core/download/manager'
 import { toast } from '@/utils/tools'
 
 export interface OnlineListProps {
@@ -82,6 +82,7 @@ export default forwardRef<OnlineListType, OnlineListProps>(({
 
   const handleDownload = (info: SelectInfo) => {
     if (info.selectedList.length) {
+      // 批量下载使用默认音质
       for (const music of info.selectedList) {
         addDownload(music).catch((e: Error) => {
           toast(e.message || global.i18n.t('download_failed') || '下载失败')
@@ -89,8 +90,11 @@ export default forwardRef<OnlineListType, OnlineListProps>(({
       }
       toast(global.i18n.t('download_added') || '已添加下载任务')
     } else {
-      addDownload(info.musicInfo).catch((e: Error) => {
-        toast(e.message || global.i18n.t('download_failed') || '下载失败')
+      // 单曲下载弹出音质选择
+      handleDownloadWithQuality(info.musicInfo).catch((e: Error) => {
+        if (e.message !== 'cancelled') {
+          toast(e.message || global.i18n.t('download_failed') || '下载失败')
+        }
       })
     }
   }

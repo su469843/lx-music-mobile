@@ -5,6 +5,7 @@ import Basic from '../settings/Basic'
 import Player from '../settings/Player'
 import LyricDesktop from '../settings/LyricDesktop'
 import Search from '../settings/Search'
+import Download from '../settings/Download'
 import List from '../settings/List'
 import Sync from '../settings/Sync'
 import Backup from '../settings/Backup'
@@ -32,6 +33,7 @@ const ListItem = memo(({
 }: { id: SettingScreenIds }) => {
   switch (id) {
     case 'player': return <Player />
+    case 'download': return <Download />
     case 'lyric_desktop': return <LyricDesktop />
     case 'search': return <Search />
     case 'list': return <List />

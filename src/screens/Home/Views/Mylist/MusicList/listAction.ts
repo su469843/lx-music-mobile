@@ -5,7 +5,7 @@ import settingState from '@/store/setting/state'
 import { similar, sortInsert, toOldMusicInfo } from '@/utils'
 import { confirmDialog, openUrl, shareMusic, toast } from '@/utils/tools'
 import { addDislikeInfo, hasDislike } from '@/core/dislikeList'
-import { addDownload as addDownloadTask } from '@/core/download/manager'
+import { addDownload as addDownloadTask, handleDownloadWithQuality } from '@/core/download/manager'
 import playerState from '@/store/player/state'
 
 import type { SelectInfo } from './ListMenu'
@@ -166,6 +166,21 @@ export const handleToggleSource = async(listId: string, musicInfo: LX.Music.Musi
 
 export const handleDownload = (info: SelectInfo) => {
   const musicList = info.selectedList.length ? info.selectedList : [info.musicInfo]
+  // 单曲下载弹出音质选择
+  if (!info.selectedList.length && musicList.length === 1) {
+    const music = musicList[0]
+    if (music.source === 'local') {
+      toast(global.i18n.t('download_local_music_not_supported') || '本地音乐无需下载')
+      return
+    }
+    handleDownloadWithQuality(music as LX.Music.MusicInfoOnline).catch((e: Error) => {
+      if (e.message !== 'cancelled') {
+        toast(e.message || global.i18n.t('download_failed') || '下载失败')
+      }
+    })
+    return
+  }
+  // 批量下载使用默认音质
   for (const music of musicList) {
     if (music.source === 'local') {
       toast(global.i18n.t('download_local_music_not_supported') || '本地音乐无需下载')
