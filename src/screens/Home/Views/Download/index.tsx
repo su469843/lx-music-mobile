@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { View, FlatList, TouchableOpacity, TextInput } from 'react-native'
+import { View, FlatList, TouchableOpacity } from 'react-native'
 import { useI18n } from '@/lang'
 import { useTheme } from '@/store/theme/hook'
 import { createStyle } from '@/utils/tools'
+import Input from '@/components/common/Input'
 import Text from '@/components/common/Text'
 import { Icon } from '@/components/common/Icon'
 import { subscribe, getTasks, removeTask, clearCompleted, retryTask, type DownloadTask } from '@/core/download/manager'
@@ -19,22 +20,6 @@ const styles = createStyle({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
-  },
-  searchInput: {
-    flex: 1,
-    height: 32,
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    fontSize: 13,
-    paddingVertical: 0,
-  },
-  searchClearBtn: {
-    paddingLeft: 8,
-    paddingVertical: 4,
   },
   tabsContainer: {
     flexDirection: 'row',
@@ -273,20 +258,14 @@ export default () => {
     <View style={{ ...styles.container, backgroundColor: theme['c-content-background'] }}>
       {/* 搜索栏 */}
       <View style={{ ...styles.searchBar, backgroundColor: theme['c-content-background'], borderBottomColor: theme['c-100'] }}>
-        <View style={{ ...styles.searchInput, backgroundColor: theme['c-primary-input-background'] || 'rgba(0,0,0,0.06)' }}>
-          <TextInput
-            style={{ flex: 1, fontSize: 13, color: theme['c-font'], paddingVertical: 0 }}
-            placeholder={t('download_search_placeholder') || '搜索已下载的歌曲'}
-            placeholderTextColor={theme['c-400']}
-            value={searchText}
-            onChangeText={setSearchText}
-          />
-        </View>
-        {searchText.length > 0 ? (
-          <TouchableOpacity style={styles.searchClearBtn} onPress={() => setSearchText('')}>
-            <Icon name="close" size={14} color={theme['c-500']} />
-          </TouchableOpacity>
-        ) : null}
+        <Input
+          placeholder={t('download_search_placeholder') || '搜索已下载的歌曲'}
+          value={searchText}
+          onChangeText={setSearchText}
+          onClearText={() => setSearchText('')}
+          clearBtn
+          style={{ borderWidth: 0, backgroundColor: 'transparent' }}
+        />
       </View>
 
       {/* 标签页 */}

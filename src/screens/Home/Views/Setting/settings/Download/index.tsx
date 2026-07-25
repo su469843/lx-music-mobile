@@ -1,14 +1,16 @@
-import { memo, useMemo } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { memo, useMemo, useRef } from 'react'
+import { StyleSheet, View, TouchableOpacity } from 'react-native'
 
 import Section from '../../components/Section'
 import SubTitle from '../../components/SubTitle'
 import CheckBoxItem from '../../components/CheckBoxItem'
-import InputItem, { type InputItemProps } from '../../components/InputItem'
 import CheckBox from '@/components/common/CheckBox'
+import ChoosePath, { type ChoosePathType } from '@/components/common/ChoosePath'
+import Text from '@/components/common/Text'
 import { useSettingValue } from '@/store/setting/hook'
 import { updateSetting } from '@/core/common'
 import { useI18n } from '@/lang'
+import { useTheme } from '@/store/theme/hook'
 import { TRY_QUALITYS_LIST } from '@/core/music/utils'
 
 
@@ -77,23 +79,48 @@ const DownloadLyricType = memo(() => {
 
 export default memo(() => {
   const t = useI18n()
+  const theme = useTheme()
   const savePath = useSettingValue('download.savePath')
   const isShowQualityPicker = useSettingValue('download.isShowQualityPicker')
   const isEmbedCover = useSettingValue('download.isEmbedCover')
+  const choosePathRef = useRef<ChoosePathType>(null)
 
-  const setSavePath: InputItemProps['onChanged'] = (value, callback) => {
-    callback(value)
-    updateSetting({ 'download.savePath': value })
+  const handleChoosePath = () => {
+    choosePathRef.current?.show({
+      title: t('setting_download_save_path') || '选择下载目录',
+      dirOnly: true,
+    })
+  }
+
+  const handlePathConfirm = (path: string) => {
+    updateSetting({ 'download.savePath': path })
   }
 
   return (
     <Section title={t('setting_download')}>
-      <InputItem
-        value={savePath}
-        label={t('setting_download_save_path')}
-        placeholder={t('setting_download_save_path_placeholder')}
-        onChanged={setSavePath}
-      />
+      {/* 下载目录 — 使用内置文件选择器 */}
+      <SubTitle title={t('setting_download_save_path')}>
+        <View style={styles.pathRow}>
+          <View style={{ ...styles.pathDisplay, backgroundColor: theme['c-primary-input-background'] || 'rgba(0,0,0,0.05)' }}>
+            <Text
+              style={styles.pathText}
+              color={theme['c-500']}
+              numberOfLines={2}
+            >
+              {savePath || (t('setting_download_save_path_placeholder') || '默认：缓存目录/LxMusicDownloads')}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={{ ...styles.pathBtn, backgroundColor: theme['c-primary-background'] }}
+            onPress={handleChoosePath}
+          >
+            <Text size={13} color={theme['c-primary-font'] || '#fff'}>{t('change_position') || '选择'}</Text>
+          </TouchableOpacity>
+        </View>
+      </SubTitle>
+
+      <ChoosePath ref={choosePathRef} onConfirm={handlePathConfirm} />
+
       <DownloadQuality />
       <CheckBoxItem check={isShowQualityPicker} onChange={value => { updateSetting({ 'download.isShowQualityPicker': value }) }} label={t('setting_download_show_quality_picker')} />
       <DownloadLyricType />
@@ -106,5 +133,25 @@ const styles = StyleSheet.create({
   list: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+  },
+  pathRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  pathDisplay: {
+    flex: 1,
+    borderRadius: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginRight: 8,
+  },
+  pathText: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  pathBtn: {
+    borderRadius: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
 })
