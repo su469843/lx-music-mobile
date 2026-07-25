@@ -522,6 +522,7 @@
   "download_failed": "下載失敗",
   "download_added": "已新增下載任務",
   "download_all": "全部",
+  "paused": "已暫停",
   "download_downloading": "正在下載",
   "download_completed": "下載成功",
   "download_error": "出錯",

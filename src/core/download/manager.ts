@@ -355,6 +355,33 @@ export const clearCompleted = () => {
   notify()
 }
 
+/**
+ * 暂停下载任务
+ */
+export const pauseTask = (taskId: string) => {
+  const task = tasks.find(t => t.id === taskId)
+  if (!task) return
+  if (task.status !== 'downloading' && task.status !== 'waiting') return
+  if (task.jobId != null) {
+    stopDownload(task.jobId)
+    task.jobId = null
+  }
+  task.status = 'paused'
+  notify()
+}
+
+/**
+ * 恢复暂停的下载任务
+ */
+export const resumeTask = (taskId: string) => {
+  const task = tasks.find(t => t.id === taskId)
+  if (!task || task.status !== 'paused') return
+  task.status = 'waiting'
+  // 重置进度
+  startOneDownload(task).catch(() => {})
+  notify()
+}
+
 export const retryTask = (taskId: string) => {
   const task = tasks.find(t => t.id === taskId)
   if (!task || (task.status !== 'error')) return

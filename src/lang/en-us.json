@@ -522,6 +522,7 @@
   "download_failed": "Download failed",
   "download_added": "Download task added",
   "download_all": "All",
+  "paused": "Paused",
   "download_downloading": "Downloading",
   "download_completed": "Completed",
   "download_error": "Error",

@@ -6,12 +6,25 @@ import { createStyle } from '@/utils/tools'
 import Input from '@/components/common/Input'
 import Text from '@/components/common/Text'
 import { Icon } from '@/components/common/Icon'
-import { subscribe, getTasks, removeTask, clearCompleted, retryTask, type DownloadTask } from '@/core/download/manager'
+import Badge from '@/components/common/Badge'
+import { subscribe, getTasks, removeTask, clearCompleted, retryTask, pauseTask, resumeTask, type DownloadTask } from '@/core/download/manager'
 import { confirmDialog } from '@/utils/tools'
 
-type FilterType = 'all' | 'downloading' | 'error' | 'completed'
+type FilterType = 'all' | 'downloading' | 'paused' | 'error' | 'completed'
 
-const FILTER_TABS: FilterType[] = ['all', 'downloading', 'error', 'completed']
+const FILTER_TABS: FilterType[] = ['all', 'downloading', 'paused', 'error', 'completed']
+
+// 音质标签
+const useQualityLabel = (task: DownloadTask): { text: string, type: 'lossless' | 'high' | 'std' } => {
+  return useMemo(() => {
+    const q = task.quality
+    if (q === 'flac24bit') return { text: '24bit', type: 'lossless' }
+    if (q === 'flac' || q === 'ape') return { text: 'FLAC', type: 'lossless' }
+    if (q === '320k') return { text: '320k', type: 'high' }
+    if (q === '192k') return { text: '192k', type: 'high' }
+    return { text: '128k', type: 'std' }
+  }, [task.quality])
+}
 
 const styles = createStyle({
   container: {
@@ -56,9 +69,14 @@ const styles = createStyle({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.03)',
   },
+  itemNum: {
+    width: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   itemInfo: {
     flex: 1,
-    paddingRight: 10,
+    paddingHorizontal: 8,
   },
   itemName: {
     fontSize: 14,
@@ -67,9 +85,14 @@ const styles = createStyle({
   itemSinger: {
     fontSize: 12,
   },
+  itemMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
   itemStatus: {
     alignItems: 'flex-end',
-    minWidth: 60,
+    minWidth: 50,
   },
   itemStatusText: {
     fontSize: 11,
@@ -85,7 +108,7 @@ const styles = createStyle({
     borderRadius: 1,
   },
   actionBtn: {
-    paddingLeft: 10,
+    paddingLeft: 8,
     paddingVertical: 4,
   },
   empty: {
@@ -111,12 +134,24 @@ const styles = createStyle({
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
+  qualityTag: {
+    borderRadius: 3,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    marginRight: 6,
+  },
+  qualityTagText: {
+    fontSize: 10,
+    lineHeight: 14,
+  },
 })
 
-const TaskItem = ({ task, onRemove, onRetry }: {
+const TaskItem = ({ task, onRemove, onRetry, onPause, onResume }: {
   task: DownloadTask,
   onRemove: (id: string) => void,
   onRetry: (id: string) => void,
+  onPause: (id: string) => void,
+  onResume: (id: string) => void,
 }) => {
   const theme = useTheme()
   const t = useI18n()
@@ -128,45 +163,123 @@ const TaskItem = ({ task, onRemove, onRetry }: {
   const safeProgress = task.progress ?? 0
   const safeError = task.error || ''
 
-  const statusLabel = (() => {
-    try {
-      return task.status === 'downloading'
-        ? `${(safeProgress * 100).toFixed(0)}%`
-        : task.status === 'completed' ? '✓'
-        : task.status === 'error' ? '✗'
-        : (t('waiting') || '等待')
-    } catch { return '...' }
-  })()
+  // 音质标签
+  const qualityInfo = useQualityLabel(task)
+
+  // 状态图标和文本
+  const statusDisplay = useMemo(() => {
+    switch (task.status) {
+      case 'downloading':
+        return {
+          icon: null,
+          text: `${(safeProgress * 100).toFixed(0)}%`,
+          color: theme['c-primary-font'],
+        }
+      case 'waiting':
+        return {
+          icon: null,
+          text: t('waiting') || '等待中',
+          color: theme['c-400'],
+        }
+      case 'paused':
+        return {
+          icon: 'pause',
+          text: t('paused') || '已暂停',
+          color: theme['c-500'],
+        }
+      case 'completed':
+        return {
+          icon: null,
+          text: t('completed') || '下载成功',
+          color: '#27ae60',
+        }
+      case 'error':
+        return {
+          icon: 'close',
+          text: safeError || (t('download_error') || '出错'),
+          color: '#e74c3c',
+        }
+      default:
+        return {
+          icon: null,
+          text: '',
+          color: theme['c-400'],
+        }
+    }
+  }, [task.status, safeProgress, safeError, theme, t])
+
+  // 音质标签颜色
+  const qualityColors = useMemo(() => {
+    switch (qualityInfo.type) {
+      case 'lossless':
+        return { bg: 'rgba(39, 174, 96, 0.15)', text: '#27ae60' }
+      case 'high':
+        return { bg: 'rgba(41, 128, 185, 0.15)', text: '#2980b9' }
+      default:
+        return { bg: 'rgba(0,0,0,0.06)', text: theme['c-500'] }
+    }
+  }, [qualityInfo, theme])
 
   return (
     <View style={styles.listItem}>
+      {/* 序号 / 播放图标 */}
+      <View style={styles.itemNum}>
+        {task.status === 'completed' ? (
+          <Icon name="music_time" size={14} color="#27ae60" />
+        ) : task.status === 'error' ? (
+          <Icon name="close" size={13} color="#e74c3c" />
+        ) : task.status === 'paused' ? (
+          <Icon name="pause" size={13} color={theme['c-500']} />
+        ) : (
+          <Text size={12} color={theme['c-400']}>{'♪'}</Text>
+        )}
+      </View>
+
+      {/* 歌曲信息 */}
       <View style={styles.itemInfo}>
         <Text style={styles.itemName} numberOfLines={1} color={theme['c-font']}>{safeName}</Text>
-        <Text style={styles.itemSinger} numberOfLines={1} color={theme['c-500']}>{safeSinger}</Text>
+        <View style={styles.itemMeta}>
+          {/* 音质标签 */}
+          <View style={{ ...styles.qualityTag, backgroundColor: qualityColors.bg }}>
+            <Text style={styles.qualityTagText} color={qualityColors.text as any}>{qualityInfo.text}</Text>
+          </View>
+          {/* 歌手 */}
+          <Text size={12} color={theme['c-500']} numberOfLines={1} style={{ flex: 1 }}>{safeSinger}</Text>
+        </View>
+        {/* 进度条 */}
         {task.status === 'downloading' && safeProgress > 0 ? (
           <View style={{ ...styles.progressBar, backgroundColor: theme['c-200'] }}>
             <View style={{ ...styles.progressFill, width: `${safeProgress * 100}%`, backgroundColor: theme['c-primary-background'] }} />
           </View>
         ) : null}
-        {safeError ? (
-          <Text size={11} color={theme['c-danger'] || '#e74c3c'}>{safeError}</Text>
-        ) : null}
       </View>
+
+      {/* 状态 & 操作 */}
       <View style={styles.itemStatus}>
-        <Text style={styles.itemStatusText}
-          color={
-            task.status === 'completed' ? '#27ae60'
-            : task.status === 'error' ? '#e74c3c'
-            : task.status === 'downloading' ? theme['c-primary-font']
-            : theme['c-400']
-          }
-        >
-          {task.status === 'downloading' ? task.speed : statusLabel}
-        </Text>
+        {task.status === 'downloading' ? (
+          <Text style={styles.itemStatusText} color={statusDisplay.color}>
+            {task.speed || statusDisplay.text}
+          </Text>
+        ) : (
+          <Text style={styles.itemStatusText} color={statusDisplay.color} numberOfLines={1}>
+            {statusDisplay.icon && <Icon name={statusDisplay.icon} size={10} color={statusDisplay.color} />}
+            {statusDisplay.text}
+          </Text>
+        )}
       </View>
+
+      {/* 操作按钮 */}
       {task.status === 'error' ? (
         <TouchableOpacity style={styles.actionBtn} onPress={() => onRetry(task.id)}>
           <Icon name="refresh" size={16} color={theme['c-500']} />
+        </TouchableOpacity>
+      ) : task.status === 'downloading' || task.status === 'waiting' ? (
+        <TouchableOpacity style={styles.actionBtn} onPress={() => onPause(task.id)}>
+          <Icon name="pause" size={16} color={theme['c-500']} />
+        </TouchableOpacity>
+      ) : task.status === 'paused' ? (
+        <TouchableOpacity style={styles.actionBtn} onPress={() => onResume(task.id)}>
+          <Icon name="play" size={16} color={theme['c-500']} />
         </TouchableOpacity>
       ) : null}
       <TouchableOpacity style={styles.actionBtn} onPress={() => onRemove(task.id)}>
@@ -195,6 +308,7 @@ export default () => {
   const counts = useMemo(() => ({
     all: taskList.length,
     downloading: taskList.filter(t => t.status === 'downloading' || t.status === 'waiting').length,
+    paused: taskList.filter(t => t.status === 'paused').length,
     error: taskList.filter(t => t.status === 'error').length,
     completed: taskList.filter(t => t.status === 'completed').length,
   }), [taskList])
@@ -202,10 +316,12 @@ export default () => {
   // 过滤+搜索
   const filteredTasks = useMemo(() => {
     let list = taskList
-    // 过滤
     switch (filter) {
       case 'downloading':
         list = list.filter(t => t.status === 'downloading' || t.status === 'waiting')
+        break
+      case 'paused':
+        list = list.filter(t => t.status === 'paused')
         break
       case 'error':
         list = list.filter(t => t.status === 'error')
@@ -214,7 +330,6 @@ export default () => {
         list = list.filter(t => t.status === 'completed')
         break
     }
-    // 搜索
     if (searchText.trim()) {
       const q = searchText.trim().toLowerCase()
       list = list.filter(t =>
@@ -237,37 +352,23 @@ export default () => {
     })
   }, [taskList, t])
 
-  const handleRemove = useCallback((id: string) => {
-    removeTask(id)
-  }, [])
-
-  const handleRetry = useCallback((id: string) => {
-    retryTask(id)
-  }, [])
+  const handleRemove = useCallback((id: string) => { removeTask(id) }, [])
+  const handleRetry = useCallback((id: string) => { retryTask(id) }, [])
+  const handlePause = useCallback((id: string) => { pauseTask(id) }, [])
+  const handleResume = useCallback((id: string) => { resumeTask(id) }, [])
 
   const hasClearable = taskList.some(t => t.status === 'completed' || t.status === 'error')
 
   const filterLabels: Record<FilterType, string> = {
     all: t('download_all') || '全部',
-    downloading: t('download_downloading') || '正在下载',
+    downloading: t('download_downloading') || '下载中',
+    paused: t('paused') || '已暂停',
     error: t('download_error') || '出错',
     completed: t('download_completed') || '下载成功',
   }
 
   return (
     <View style={{ ...styles.container, backgroundColor: theme['c-content-background'] }}>
-      {/* 搜索栏 */}
-      <View style={{ ...styles.searchBar, backgroundColor: theme['c-content-background'], borderBottomColor: theme['c-100'] }}>
-        <Input
-          placeholder={t('download_search_placeholder') || '搜索已下载的歌曲'}
-          value={searchText}
-          onChangeText={setSearchText}
-          onClearText={() => setSearchText('')}
-          clearBtn
-          style={{ borderWidth: 0, backgroundColor: 'transparent' }}
-        />
-      </View>
-
       {/* 标签页 */}
       <View style={{ ...styles.tabsContainer, borderBottomColor: theme['c-100'] }}>
         {FILTER_TABS.map(tab => (
@@ -290,6 +391,18 @@ export default () => {
             ) : null}
           </TouchableOpacity>
         ))}
+      </View>
+
+      {/* 搜索栏 */}
+      <View style={{ ...styles.searchBar, backgroundColor: theme['c-content-background'], borderBottomColor: theme['c-100'] }}>
+        <Input
+          placeholder={t('download_search_placeholder') || '搜索已下载的歌曲'}
+          value={searchText}
+          onChangeText={setSearchText}
+          onClearText={() => setSearchText('')}
+          clearBtn
+          style={{ borderWidth: 0, backgroundColor: 'transparent' }}
+        />
       </View>
 
       {/* 操作栏 */}
@@ -316,7 +429,13 @@ export default () => {
           data={filteredTasks}
           keyExtractor={item => item.id}
           renderItem={({ item }) => (
-            <TaskItem task={item} onRemove={handleRemove} onRetry={handleRetry} />
+            <TaskItem
+              task={item}
+              onRemove={handleRemove}
+              onRetry={handleRetry}
+              onPause={handlePause}
+              onResume={handleResume}
+            />
           )}
         />
       )}
