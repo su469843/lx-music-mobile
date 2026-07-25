@@ -67,3 +67,6 @@ buck-out/
 # testing
 /coverage
 /.codewhale/
+**/.codewhale/*
+!**/.codewhale/constitution.json
+.deepseek/
