@@ -136,26 +136,35 @@ const TaskItem = ({ task, onRemove, onRetry }: {
   const theme = useTheme()
   const t = useI18n()
 
-  const statusLabel = task.status === 'downloading'
-    ? `${(task.progress * 100).toFixed(0)}%`
-    : task.status === 'completed'
-      ? '✓'
-      : task.status === 'error'
-        ? '✗'
-        : t('waiting') || '等待'
+  // 空值保护
+  const musicInfo = task.musicInfo
+  const safeName = musicInfo?.name || (t('unknown') || '未知')
+  const safeSinger = musicInfo?.singer || ''
+  const safeProgress = task.progress ?? 0
+  const safeError = task.error || ''
+
+  const statusLabel = (() => {
+    try {
+      return task.status === 'downloading'
+        ? `${(safeProgress * 100).toFixed(0)}%`
+        : task.status === 'completed' ? '✓'
+        : task.status === 'error' ? '✗'
+        : (t('waiting') || '等待')
+    } catch { return '...' }
+  })()
 
   return (
     <View style={styles.listItem}>
       <View style={styles.itemInfo}>
-        <Text style={styles.itemName} numberOfLines={1} color={theme['c-font']}>{task.musicInfo.name}</Text>
-        <Text style={styles.itemSinger} numberOfLines={1} color={theme['c-500']}>{task.musicInfo.singer}</Text>
-        {task.status === 'downloading' ? (
+        <Text style={styles.itemName} numberOfLines={1} color={theme['c-font']}>{safeName}</Text>
+        <Text style={styles.itemSinger} numberOfLines={1} color={theme['c-500']}>{safeSinger}</Text>
+        {task.status === 'downloading' && safeProgress > 0 ? (
           <View style={{ ...styles.progressBar, backgroundColor: theme['c-200'] }}>
-            <View style={{ ...styles.progressFill, width: `${task.progress * 100}%`, backgroundColor: theme['c-primary-background'] }} />
+            <View style={{ ...styles.progressFill, width: `${safeProgress * 100}%`, backgroundColor: theme['c-primary-background'] }} />
           </View>
         ) : null}
-        {task.error ? (
-          <Text size={11} color={theme['c-danger'] || '#e74c3c'}>{task.error}</Text>
+        {safeError ? (
+          <Text size={11} color={theme['c-danger'] || '#e74c3c'}>{safeError}</Text>
         ) : null}
       </View>
       <View style={styles.itemStatus}>

@@ -9,6 +9,7 @@ import { getMusicUrl as getOnlineMusicUrl } from '@/core/music/online'
 import { getLyricInfo, getPicPath } from '@/core/music'
 import { formatMusicName } from '@/utils/tools'
 import settingState from '@/store/setting/state'
+import { log } from '@/utils/log'
 import { Alert } from 'react-native'
 
 export interface DownloadTask {
@@ -109,8 +110,9 @@ const downloadLrcFile = async (task: DownloadTask, saveDir: string, finalPath: s
     const lrcPath = `${saveDir}/${buildLrcFileName(finalPath.split('/').pop() || '')}`
     await writeFile(lrcPath, lrcContent, 'utf8')
     task.postActions.lrc = 'done'
-  } catch {
+  } catch (err) {
     task.postActions.lrc = 'skipped'
+    log.error(`[download] 下载歌词失败: ${task.musicInfo.name} - ${task.musicInfo.singer}, 错误: ${(err as Error)?.message || '未知'}`)
   }
 }
 
@@ -138,8 +140,9 @@ const downloadCoverFile = async (task: DownloadTask, saveDir: string, finalPath:
     } else {
       task.postActions.cover = 'skipped'
     }
-  } catch {
+  } catch (err) {
     task.postActions.cover = 'skipped'
+    log.error(`[download] 下载封面失败: ${task.musicInfo.name} - ${task.musicInfo.singer}, 错误: ${(err as Error)?.message || '未知'}`)
   }
 }
 
@@ -240,6 +243,7 @@ const startOneDownload = async (task: DownloadTask) => {
   } catch (err: any) {
     task.status = 'error'
     task.error = err.message || String(err)
+    log.error(`[download] 下载失败: ${task.musicInfo.name} - ${task.musicInfo.singer}, 音质: ${task.quality}, 错误: ${err.message || String(err)}`)
   }
   notify()
 }
