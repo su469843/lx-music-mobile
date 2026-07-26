@@ -10,6 +10,7 @@ import { handleDislikeMusic, handlePlay, handlePlayLater, handleShare, handleSho
 import { createStyle } from '@/utils/tools'
 import { addDownload, handleDownloadWithQuality } from '@/core/download/manager'
 import { toast } from '@/utils/tools'
+import { useI18n } from '@/lang'
 
 export interface OnlineListProps {
   onRefresh: ListProps['onRefresh']
@@ -41,6 +42,8 @@ export default forwardRef<OnlineListType, OnlineListProps>(({
   const listMenuRef = useRef<ListMenuType>(null)
   // const loadingMaskRef = useRef<LoadingMaskType>(null)
 
+  const t = useI18n()
+
   useImperativeHandle(ref, () => ({
     setList(list, isAppend = false, showSource = false) {
       listRef.current?.setList(list, isAppend, showSource)
@@ -51,20 +54,20 @@ export default forwardRef<OnlineListType, OnlineListProps>(({
     },
   }))
 
-  const hancelMultiSelect = () => {
+  const handleMultiSelect = (): void => {
     multipleModeBarRef.current?.show()
     listRef.current?.setIsMultiSelectMode(true)
   }
-  const hancelSwitchSelectMode = (mode: SelectMode) => {
+  const handleSwitchSelectMode = (mode: SelectMode): void => {
     multipleModeBarRef.current?.setSwitchMode(mode)
     listRef.current?.setSelectMode(mode)
   }
-  const hancelExitSelect = () => {
+  const handleExitSelect = (): void => {
     multipleModeBarRef.current?.exitSelectMode()
     listRef.current?.setIsMultiSelectMode(false)
   }
 
-  const showMenu = (musicInfo: LX.Music.MusicInfoOnline, index: number, position: Position) => {
+  const showMenu = (musicInfo: LX.Music.MusicInfoOnline, index: number, position: Position): void => {
     listMenuRef.current?.show({
       musicInfo,
       index,
@@ -72,7 +75,7 @@ export default forwardRef<OnlineListType, OnlineListProps>(({
       selectedList: listRef.current!.getSelectedList(),
     }, position)
   }
-  const handleAddMusic = (info: SelectInfo) => {
+  const handleAddMusic = (info: SelectInfo): void => {
     if (info.selectedList.length) {
       listMusicMultiAddRef.current?.show({ selectedList: info.selectedList, listId: '', isMove: false })
     } else {
@@ -80,20 +83,20 @@ export default forwardRef<OnlineListType, OnlineListProps>(({
     }
   }
 
-  const handleDownload = (info: SelectInfo) => {
+  const handleDownload = (info: SelectInfo): void => {
     if (info.selectedList.length) {
       // 批量下载使用默认音质
       for (const music of info.selectedList) {
         addDownload(music).catch((e: Error) => {
-          toast(e.message || global.i18n.t('download_failed') || '下载失败')
+          toast(e.message || t('download_failed') || '下载失败')
         })
       }
-      toast(global.i18n.t('download_added') || '已添加下载任务')
+      toast(t('download_added') || '已添加下载任务')
     } else {
       // 单曲下载弹出音质选择
       handleDownloadWithQuality(info.musicInfo).catch((e: Error) => {
         if (e.message !== 'cancelled') {
-          toast(e.message || global.i18n.t('download_failed') || '下载失败')
+          toast(e.message || t('download_failed') || '下载失败')
         }
       })
     }
@@ -105,8 +108,8 @@ export default forwardRef<OnlineListType, OnlineListProps>(({
         <List
           ref={listRef}
           onShowMenu={showMenu}
-          onMuiltSelectMode={hancelMultiSelect}
-          onSelectAll={isAll => multipleModeBarRef.current?.setIsSelectAll(isAll)}
+          onMuiltSelectMode={handleMultiSelect}
+          onSelectAll={(isAll: boolean) => multipleModeBarRef.current?.setIsSelectAll(isAll)}
           onRefresh={onRefresh}
           onLoadMore={onLoadMore}
           onPlayList={onPlayList}
@@ -117,21 +120,21 @@ export default forwardRef<OnlineListType, OnlineListProps>(({
         />
         <MultipleModeBar
           ref={multipleModeBarRef}
-          onSwitchMode={hancelSwitchSelectMode}
-          onSelectAll={isAll => listRef.current?.selectAll(isAll)}
-          onExitSelectMode={hancelExitSelect}
+          onSwitchMode={handleSwitchSelectMode}
+          onSelectAll={(isAll: boolean) => listRef.current?.selectAll(isAll)}
+          onExitSelectMode={handleExitSelect}
         />
       </View>
-      <ListMusicAdd ref={listMusicAddRef} onAdded={() => { hancelExitSelect() }} />
-      <ListMusicMultiAdd ref={listMusicMultiAddRef} onAdded={() => { hancelExitSelect() }} />
+      <ListMusicAdd ref={listMusicAddRef} onAdded={() => { handleExitSelect() }} />
+      <ListMusicMultiAdd ref={listMusicMultiAddRef} onAdded={() => { handleExitSelect() }} />
       <ListMenu
         ref={listMenuRef}
-        onPlay={info => { handlePlay(info.musicInfo) }}
-        onPlayLater={info => { hancelExitSelect(); handlePlayLater(info.musicInfo, info.selectedList, hancelExitSelect) }}
-        onCopyName={info => { handleShare(info.musicInfo) }}
+        onPlay={(info: SelectInfo) => { handlePlay(info.musicInfo) }}
+        onPlayLater={(info: SelectInfo) => { handleExitSelect(); handlePlayLater(info.musicInfo, info.selectedList, handleExitSelect) }}
+        onCopyName={(info: SelectInfo) => { handleShare(info.musicInfo) }}
         onAdd={handleAddMusic}
-        onMusicSourceDetail={info => { void handleShowMusicSourceDetail(info.musicInfo) }}
-        onDislikeMusic={info => { void handleDislikeMusic(info.musicInfo) }}
+        onMusicSourceDetail={(info: SelectInfo) => { void handleShowMusicSourceDetail(info.musicInfo) }}
+        onDislikeMusic={(info: SelectInfo) => { void handleDislikeMusic(info.musicInfo) }}
         onDownload={handleDownload}
       />
       {/* <LoadingMask ref={loadingMaskRef} /> */}

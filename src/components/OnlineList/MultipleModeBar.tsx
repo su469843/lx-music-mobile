@@ -4,6 +4,7 @@ import { Animated, View, TouchableOpacity } from 'react-native'
 import Text from '@/components/common/Text'
 import Button from '@/components/common/Button'
 import { useTheme } from '@/store/theme/hook'
+import { useI18n } from '@/lang'
 import { createStyle } from '@/utils/tools'
 import { BorderWidths } from '@/theme'
 import { scaleSizeH } from '@/utils/pixelRatio'
@@ -25,6 +26,7 @@ export interface MultipleModeBarType {
 }
 
 export default forwardRef<MultipleModeBarType, MultipleModeBarProps>(({ onSelectAll, onSwitchMode, onExitSelectMode }, ref) => {
+  const t = useI18n()
   // const isGetDetailFailedRef = useRef(false)
   const [visible, setVisible] = useState(false)
   const [animatePlayed, setAnimatPlayed] = useState(true)
@@ -116,21 +118,21 @@ export default forwardRef<MultipleModeBarType, MultipleModeBarProps>(({ onSelect
       <Animated.View style={animaStyle}>
         <View style={styles.switchBtn}>
           <Button onPress={() => { onSwitchMode('single') }} style={{ ...styles.btn, backgroundColor: selectMode == 'single' ? theme['c-button-background'] : 'rgba(0,0,0,0)' }}>
-            <Text color={theme['c-button-font']}>{global.i18n.t('list_select_single')}</Text>
+            <Text color={theme['c-button-font']}>{t('list_select_single')}</Text>
           </Button>
           <Button onPress={() => { onSwitchMode('range') }} style={{ ...styles.btn, backgroundColor: selectMode == 'range' ? theme['c-button-background'] : 'rgba(0,0,0,0)' }}>
-            <Text color={theme['c-button-font']}>{global.i18n.t('list_select_range')}</Text>
+            <Text color={theme['c-button-font']}>{t('list_select_range')}</Text>
           </Button>
         </View>
         <TouchableOpacity onPress={handleSelectAll} style={styles.btn}>
-          <Text color={theme['c-button-font']}>{global.i18n.t(isSelectAll ? 'list_select_unall' : 'list_select_all')}</Text>
+          <Text color={theme['c-button-font']}>{t(isSelectAll ? 'list_select_unall' : 'list_select_all')}</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={onExitSelectMode} style={styles.btn}>
-          <Text color={theme['c-button-font']}>{global.i18n.t('list_select_cancel')}</Text>
+          <Text color={theme['c-button-font']}>{t('list_select_cancel')}</Text>
         </TouchableOpacity>
       </Animated.View>
     )
-  }, [animaStyle, selectMode, theme, handleSelectAll, isSelectAll, onExitSelectMode, onSwitchMode])
+  }, [animaStyle, selectMode, theme, handleSelectAll, isSelectAll, onExitSelectMode, onSwitchMode, t])
 
   return !visible && animatePlayed ? null : component
 })
