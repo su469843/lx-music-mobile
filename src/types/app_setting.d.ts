@@ -347,14 +347,24 @@ declare global {
       'list.addMusicLocationType': AddMusicLocationType
 
       /**
-       * 文件命名方式
+       * 是否启用下载功能
        */
-      'download.fileName': '歌名 - 歌手' | '歌手 - 歌名' | '歌名'
+      'download.enable': boolean
+
+      /**
+       * 按列表名分组保存
+       */
+      'download.isSavePathGroupByListName': boolean
 
       /**
        * 下载保存路径
        */
       'download.savePath': string
+
+      /**
+       * 文件命名方式
+       */
+      'download.fileName': '歌名 - 歌手' | '歌手 - 歌名' | '歌名'
 
       /**
        * 默认下载音质
@@ -375,6 +385,101 @@ declare global {
        * 下载封面到歌曲文件
        */
       'download.isEmbedCover': boolean
+
+      /**
+       * 最大并发下载数
+       */
+      'download.maxDownloadNum': number
+
+      /**
+       * 存在同名文件时跳过下载
+       */
+      'download.skipExistFile': boolean
+
+      /**
+       * 是否下载lrc文件
+       */
+      'download.isDownloadLrc': boolean
+
+      /**
+       * 是否在下载 lx 歌词
+       */
+      'download.isDownloadLxLrc': boolean
+
+      /**
+       * 是否下载翻译歌词文件
+       */
+      'download.isDownloadTLrc': boolean
+
+      /**
+       * 是否下载罗马音歌词文件
+       */
+      'download.isDownloadRLrc': boolean
+
+      /**
+       * 保存lrc时的文本编码格式
+       */
+      'download.lrcFormat': 'utf8' | 'gbk'
+
+      /**
+       * 是否在音频文件中嵌入歌曲封面
+       */
+      'download.isEmbedPic': boolean
+
+      /**
+       * 是否在音频文件中嵌入 lx 歌词
+       */
+      'download.isEmbedLyricLx': boolean
+
+      /**
+       * 是否在音频文件中嵌入歌词
+       */
+      'download.isEmbedLyric': boolean
+
+      /**
+       * 是否在音频文件中嵌入翻译歌词
+       */
+      'download.isEmbedLyricT': boolean
+
+      /**
+       * 是否在音频文件中嵌入罗马音歌词
+       */
+      'download.isEmbedLyricR': boolean
+
+      /**
+       * 歌曲源不可用时，是否启用换源下载
+       */
+      'download.isUseOtherSource': boolean
+
+      /**
+       * 下载文件命名方式
+       */
+      'download.fileNaming': 'title_artist' | 'artist_title' | 'id_title_artist'
+
+      /**
+       * 下载文件夹结构
+       */
+      'download.folderStructure': 'flat' | 'singer' | 'album' | 'singer_album'
+
+      /**
+       * 同时下载任务数
+       */
+      'download.concurrentCount': number
+
+      /**
+       * 写入ID3标签
+       */
+      'download.writeTags': boolean
+
+      /**
+       * 跳过已存在文件
+       */
+      'download.skipExisting': boolean
+
+      /**
+       * 单独保存歌词文件
+       */
+      'download.saveLyricSeparately': boolean
 
       /**
        * 是否启用同步

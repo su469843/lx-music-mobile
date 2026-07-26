@@ -330,8 +330,11 @@ export const resetIgnoringBatteryOptimizationCheck = async() => {
   return removeData(storageDataPrefix.ignoringBatteryOptimizationTipEnable)
 }
 
-export const formatMusicName = (format: string, name: string, singer: string) => {
-  return format.replace('歌手', singer).replace('歌名', name)
+export const formatMusicName = (format: string, name: string, singer: string, album: string = '') => {
+  return format
+    .replace('歌手', singer)
+    .replace('歌名', name)
+    .replace('专辑', album)
 }
 
 export const shareMusic = (shareType: LX.ShareType, downloadFileName: LX.AppSetting['download.fileName'], musicInfo: LX.Music.MusicInfo) => {

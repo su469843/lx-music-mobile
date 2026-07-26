@@ -15,7 +15,7 @@ import { Alert } from 'react-native'
 export interface DownloadTask {
   id: string
   musicInfo: LX.Music.MusicInfoOnline
-  status: 'waiting' | 'downloading' | 'completed' | 'error'
+  status: 'waiting' | 'downloading' | 'completed' | 'error' | 'paused'
   progress: number
   speed: string
   downloaded: number
@@ -53,10 +53,31 @@ export const subscribe = (listener: Listener) => {
 
 export const getTasks = () => [...tasks]
 
-const getSaveDir = async (): Promise<string> => {
+const getSaveDir = async (musicInfo?: LX.Music.MusicInfoOnline): Promise<string> => {
   const baseDir = settingState.setting['download.savePath'] || `${temporaryDirectoryPath}/lx-music-downloads`
-  await mkdir(baseDir)
-  return baseDir
+  
+  const folderStructure = settingState.setting['download.folderStructure'] || 'flat'
+  
+  if (!musicInfo || folderStructure === 'flat') {
+    await mkdir(baseDir)
+    return baseDir
+  }
+  
+  // Build folder structure based on setting
+  let folderPath = baseDir
+  const singer = musicInfo.singer || 'Unknown Artist'
+  const album = musicInfo.meta?.albumName || 'Unknown Album'
+  
+  if (folderStructure === 'singer') {
+    folderPath = `${baseDir}/${singer.replace(/[\\/:*?"<>|]/g, '_')}`
+  } else if (folderStructure === 'album') {
+    folderPath = `${baseDir}/${album.replace(/[\\/:*?"<>|]/g, '_')}`
+  } else if (folderStructure === 'singer_album') {
+    folderPath = `${baseDir}/${singer.replace(/[\\/:*?"<>|]/g, '_')}/${album.replace(/[\\/:*?"<>|]/g, '_')}`
+  }
+  
+  await mkdir(folderPath)
+  return folderPath
 }
 
 const getFileExt = (musicInfo: LX.Music.MusicInfoOnline, quality?: LX.Quality): LX.Download.FileExt => {
@@ -78,7 +99,8 @@ const getFileExt = (musicInfo: LX.Music.MusicInfoOnline, quality?: LX.Quality): 
 
 const buildFileName = (musicInfo: LX.Music.MusicInfoOnline, ext: string): string => {
   const pattern = settingState.setting['download.fileName'] || '歌名 - 歌手'
-  return `${formatMusicName(pattern, musicInfo.name, musicInfo.singer)}.${ext}`
+  const album = musicInfo.meta?.albumName || ''
+  return `${formatMusicName(pattern, musicInfo.name, musicInfo.singer, album)}.${ext}`
 }
 
 const buildLrcFileName = (musicFileName: string): string => {
