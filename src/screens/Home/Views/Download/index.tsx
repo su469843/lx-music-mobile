@@ -1,12 +1,10 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
-import { View, FlatList, TouchableOpacity } from 'react-native'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { View, FlatList, TouchableOpacity, Modal, Pressable, TextInput } from 'react-native'
 import { useI18n } from '@/lang'
 import { useTheme } from '@/store/theme/hook'
 import { createStyle } from '@/utils/tools'
-import Input from '@/components/common/Input'
 import Text from '@/components/common/Text'
 import { Icon } from '@/components/common/Icon'
-import Badge from '@/components/common/Badge'
 import { subscribe, getTasks, removeTask, clearCompleted, retryTask, pauseTask, resumeTask, type DownloadTask } from '@/core/download/manager'
 import { confirmDialog } from '@/utils/tools'
 
@@ -30,14 +28,15 @@ const styles = createStyle({
   container: {
     flex: 1,
   },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   tabsContainer: {
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.05)',
+    alignItems: 'center',
+  },
+  tabsScroll: {
+    flex: 1,
+    flexDirection: 'row',
   },
   tab: {
     flex: 1,
@@ -57,6 +56,10 @@ const styles = createStyle({
     borderRadius: 1,
     marginTop: 4,
     width: '60%',
+  },
+  searchIconBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   list: {
     flex: 1,
@@ -143,6 +146,36 @@ const styles = createStyle({
   qualityTagText: {
     fontSize: 10,
     lineHeight: 14,
+  },
+  // 搜索弹窗样式
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-start',
+  },
+  modalSearchBar: {
+    marginTop: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.08)',
+  },
+  modalSearchInput: {
+    flex: 1,
+    fontSize: 15,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  modalCloseBtn: {
+    marginLeft: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
+  modalList: {
+    flex: 1,
   },
 })
 
@@ -293,8 +326,10 @@ export default () => {
   const t = useI18n()
   const theme = useTheme()
   const [taskList, setTaskList] = useState<DownloadTask[]>([])
-  const [filter, setFilter] = useState<FilterType>('all')
+  const [filter, setFilter] = useState<FilterType>('downloading')
   const [searchText, setSearchText] = useState('')
+  const [searchModalVisible, setSearchModalVisible] = useState(false)
+  const searchInputRef = useRef<TextInput>(null)
 
   useEffect(() => {
     const unsub = subscribe((tasks) => {
@@ -361,48 +396,60 @@ export default () => {
 
   const filterLabels: Record<FilterType, string> = {
     all: t('download_all') || '全部',
-    downloading: t('download_downloading') || '下载中',
+    downloading: t('download_downloading') || '正在下载',
     paused: t('paused') || '已暂停',
     error: t('download_error') || '出错',
     completed: t('download_completed') || '下载成功',
   }
 
+  // 打开搜索弹窗
+  const handleOpenSearch = () => {
+    setSearchModalVisible(true)
+    // 延迟聚焦，等 Modal 动画完成
+    setTimeout(() => {
+      searchInputRef.current?.focus()
+    }, 300)
+  }
+
+  // 关闭搜索弹窗
+  const handleCloseSearch = () => {
+    setSearchModalVisible(false)
+    setSearchText('')
+  }
+
   return (
     <View style={{ ...styles.container, backgroundColor: theme['c-content-background'] }}>
-      {/* 标签页 */}
+      {/* 标签页 + 搜索图标 */}
       <View style={{ ...styles.tabsContainer, borderBottomColor: theme['c-100'] }}>
-        {FILTER_TABS.map(tab => (
-          <TouchableOpacity
-            key={tab}
-            style={styles.tab}
-            onPress={() => setFilter(tab)}
-          >
-            <Text
-              style={styles.tabText}
-              color={filter === tab ? theme['c-primary-font'] : theme['c-400']}
+        <View style={styles.tabsScroll}>
+          {FILTER_TABS.map(tab => (
+            <TouchableOpacity
+              key={tab}
+              style={styles.tab}
+              onPress={() => setFilter(tab)}
             >
-              {filterLabels[tab]}
-            </Text>
-            <Text style={styles.tabBadge} color={filter === tab ? theme['c-primary-font'] : theme['c-400']}>
-              {counts[tab]}
-            </Text>
-            {filter === tab ? (
-              <View style={{ ...styles.activeTabUnderline, backgroundColor: theme['c-primary'] }} />
-            ) : null}
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* 搜索栏 */}
-      <View style={{ ...styles.searchBar, backgroundColor: theme['c-content-background'], borderBottomColor: theme['c-100'] }}>
-        <Input
-          placeholder={t('download_search_placeholder') || '搜索已下载的歌曲'}
-          value={searchText}
-          onChangeText={setSearchText}
-          onClearText={() => setSearchText('')}
-          clearBtn
-          style={{ borderWidth: 0, backgroundColor: 'transparent' }}
-        />
+              <Text
+                style={styles.tabText}
+                color={filter === tab ? theme['c-primary-font'] : theme['c-400']}
+              >
+                {filterLabels[tab]}
+              </Text>
+              <Text style={styles.tabBadge} color={filter === tab ? theme['c-primary-font'] : theme['c-400']}>
+                {counts[tab]}
+              </Text>
+              {filter === tab ? (
+                <View style={{ ...styles.activeTabUnderline, backgroundColor: theme['c-primary'] }} />
+              ) : null}
+            </TouchableOpacity>
+          ))}
+        </View>
+        {/* 搜索图标 */}
+        <TouchableOpacity
+          style={styles.searchIconBtn}
+          onPress={handleOpenSearch}
+        >
+          <Icon name="search-2" size={20} color={theme['c-font']} />
+        </TouchableOpacity>
       </View>
 
       {/* 操作栏 */}
@@ -439,6 +486,39 @@ export default () => {
           )}
         />
       )}
+
+      {/* 搜索弹窗 Modal */}
+      <Modal
+        visible={searchModalVisible}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={handleCloseSearch}
+      >
+        <Pressable style={styles.modalOverlay} onPress={handleCloseSearch}>
+          {/* 阻止点击搜索框时关闭弹窗 */}
+          <Pressable onPress={() => {}}>
+            <View style={{ ...styles.modalSearchBar, backgroundColor: theme['c-content-background'], borderBottomColor: theme['c-100'] }}>
+              <TextInput
+                ref={searchInputRef}
+                style={{
+                  ...styles.modalSearchInput,
+                  color: theme['c-font'],
+                  backgroundColor: theme['c-primary-input-background'] || 'rgba(0,0,0,0.05)',
+                }}
+                placeholder={t('download_search_placeholder') || '搜索已下载的歌曲'}
+                placeholderTextColor={theme['c-400']}
+                value={searchText}
+                onChangeText={setSearchText}
+                autoFocus={false}
+                returnKeyType="search"
+              />
+              <TouchableOpacity style={styles.modalCloseBtn} onPress={handleCloseSearch}>
+                <Text size={14} color={theme['c-primary-font']}>{t('cancel_button_text_2') || '取消'}</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   )
 }
